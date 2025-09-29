@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブルアカステータスメッセージクイズ</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        #result-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; }
+        #resultImage {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+            margin-top: 10px;
+            display: none;
+        }
+        #score { display: none; font-size: 20px; font-weight: bold; margin-top: 20px; }
+        #screenshotButton { display: none; margin-top: 20px; padding: 10px; font-size: 16px; margin: 20px auto; }
+        #passButton { margin-top: 10px; padding: 10px; font-size: 16px; }
+        #questionText { font-size: 18px; margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>ブルアカ<br>ステータスメッセージクイズ</h1>
+    <p id="questionText">問題がここに表示されます</p>
+    <br>
+    <input type="text" id="answer" placeholder="答えを入力">
+    <button onclick="checkAnswer()">回答</button>
+    <button id="passButton" onclick="passQuestion()">パス</button>
+
+    <div id="result-container">
+        <p id="result"></p>
+        <img id="resultImage" src="" alt="結果の画像">
+    </div>
+    <p id="score"></p>
+    <button id="screenshotButton" onclick="takeScreenshot()">スクリーンショットを撮る</button>
+
+    <script>
+        let allQuestions = [
+            { questionText:"チョコミントは最高！", answer: ["アイリ"], image: "r1.png" },
+            { questionText:"もう大丈夫！", answer: ["アイリ（バンド）"], image: "r2.png" },
+            { questionText:"Life is disaster.", answer: ["アオバ"], image: "r3.png" },
+            { questionText:"温かい紅茶一杯分の余裕を", answer: ["アカネ"], image: "r4.png" },
+            { questionText:"少しだけ新しい日常と共に", answer: ["アカネ（バニーガール）"], image: "r5.png" },
+            { questionText:"おすすめの食べ放題を教えてください", answer: ["アカリ"], image: "r6.png" },
+            { questionText:"新年には美食の旅に出ましょうか♣", answer: ["アカリ（正月）"], image: "r7.png" },
+            { questionText:"業務以外の連絡はお断りです", answer: ["アコ"], image: "r8.png" },
+            { questionText:"今の私は、ただのエージェント…", answer: ["アコ（ドレス）"], image: "r9.png" },
+            { questionText:"et omnia vanitas", answer: ["アズサ"], image: "r10.png" },
+            { questionText:"A brevis paradisum", answer: ["アズサ（水着）"], image: "r11.png" },
+            { questionText:"最高の奉仕をご主人様に！", answer: ["アスナ"], image: "r12.png" },
+            { questionText:"最高の楽しさをご主人様に！", answer: ["アスナ（バニーガール）"], image: "r13.png" },
+            { questionText:"最高の体験をお届けするよ！", answer: ["アスナ（制服）"], image: "r14.png" },
+            { questionText:"最近は花言葉を勉強してる", answer: ["アツコ"], image: "r15.png" },
+            { questionText:"人物写真を撮る練習してる", answer: ["アツコ（水着）"], image: "r16.png" },
+            { questionText:"常識を大切にする対策委員会です", answer: ["アヤネ"], image: "r17.png" },
+            { questionText:"遊ぶときはしっかり遊びましょう！", answer: ["アヤネ（水着）"], image: "r18.png" },
+            { questionText:"ミレニアムのゲーム開発部、アリスです", answer: ["アリス"], image: "r19.png" },
+            { questionText:"メイド勇者のアリスです", answer: ["アリス（メイド）"], image: "r20.png" },
+            { questionText:"なんでも解決するわよ！", answer: ["アル"], image: "r21.png" },
+            { questionText:"本年もどうぞよろしくお願いいたします", answer: ["アル（正月）"], image: "r22.png" },
+            { questionText:"大事な依頼ね", answer: ["アル（ドレス）"], image: "r23.png" },
+            { questionText:"怪しい人を見たらすぐに連絡", answer: ["イオリ"], image: "r24.png" },
+            { questionText:"夏の合宿訓練中", answer: ["イオリ（水着）"], image: "r25.png" },
+            { questionText:"イズナ、頑張ります！ニンニン！", answer: ["イズナ"], image: "r26.png" },
+            { questionText:"今度は海で修行です！ニンニン！", answer: ["イズナ（水着）"], image: "r27.png" },
+            { questionText:"お腹へったぁあ～", answer: ["イズミ"], image: "r28.png" },
+            { questionText:"夏のグルメを求める旅へ！", answer: ["イズミ（水着）"], image: "r29.png" },
+            { questionText:"食も人生も冒険だよね！", answer: ["イズミ（正月）"], image: "r30.png" },
+            { questionText:"いつも皆さんの味方、正義実現委員会っす！", answer: ["イチカ"], image: "r31.png" },
+            { questionText:"ゲヘナ学園のイブキです！", answer: ["イブキ"], image: "r32.png" },
+            { questionText:"読書中につき、急用以外は連絡しないでください", answer: ["イロハ"], image: "r33.png" },
+            { questionText:"作業中", answer: ["ウイ"], image: "r34.png" },
+            { questionText:"出張中", answer: ["ウイ（水着）"], image: "r35.png" },
+            { questionText:"改造・修理の依頼ならいつでも", answer: ["ウタハ"], image: "r36.png" },
+            { questionText:"応援依頼受付中！", answer: ["ウタハ（応援団）"], image: "r37.png" },
+            { questionText:"お祭りに関するお知らせがあれば、教えてくださいね！", answer: ["ウミカ"], image: "r38.png" },
+            { questionText:"ここにステータスメッセージを入力", answer: ["エイミ"], image: "r39.png" },
+            { questionText:"不在", answer: ["エイミ（水着）"], image: "r40.png" },
+            { questionText:"今日は何して遊ぶ！？", answer: ["カエデ"], image: "r41.png" },
+            { questionText:"みな温泉から生まれ、温泉に還る", answer: ["カスミ"], image: "r42.png" },
+            { questionText:"放課後スイーツ部のメンバーです", answer: ["カズサ"], image: "r43.png" },
+            { questionText:"シュガーラッシュのメインボーカル兼ベース", answer: ["カズサ（バンド）"], image: "r44.png" },
+            { questionText:"業務に関してはお気軽にご相談ください", answer: ["カホ"], image: "r45.png" },
+            { questionText:"モモトークはあんまり使わない", answer: ["カヨコ"], image: "r46.png" },
+            { questionText:"謹賀新年", answer: ["カヨコ（正月）"], image: "r47.png" },
+            { questionText:"仕事が終わったら返事する", answer: ["カヨコ（ドレス）"], image: "r48.png" },
+            { questionText:"ターゲットは逃がさない", answer: ["カリン"], image: "r49.png" },
+            { questionText:"任務中", answer: ["カリン（バニーガール）"], image: "r50.png" },
+            { questionText:"特殊任務遂行中", answer: ["カリン（制服）"], image: "r51.png" },
+            { questionText:"安全なキヴォトスを目指して、ヴァルキューレにお任せを", answer: ["カンナ"], image: "r52.png" },
+            { questionText:"奉仕、傾聴、誠実", answer: ["カンナ（水着）"], image: "r53.png" },
+            { questionText:"教学相長ず", answer: ["キキョウ"], image: "r54.png" },
+            { questionText:"正心誠意", answer: ["キサキ"], image: "r55.png" },
+            { questionText:"#キラキラ#いつも_ハッピー", answer: ["キララ"], image: "r56.png" },
+            { questionText:"ヴァルキューレ警察学校、転入学者募集中！", answer: ["キリノ"], image: "r57.png" },
+            { questionText:"ライフセーバーの任務中です！", answer: ["キリノ（水着）"], image: "r58.png" },
+            { questionText:"山海経の教官です！", answer: ["ココナ"], image: "r59.png" },
+            { questionText:"あなたを見守っています", answer: ["コタマ"], image: "r60.png" },
+            { questionText:"あなたの音に耳を澄ませています", answer: ["コタマ（キャンプ）"], image: "r61.png" },
+            { questionText:"マイクロ波を讃えましょう！", answer: ["コトリ"], image: "r62.png" },
+            { questionText:"健全な知識は健全な肉体に宿ります！", answer: ["コトリ（応援団）"], image: "r63.png" },
+            { questionText:"エッチなのはダメったらダメ！", answer: ["コハル"], image: "r64.png" },
+            { questionText:"水着はエッチじゃないんだからね！", answer: ["コハル（水着）"], image: "r65.png" },
+            { questionText:"いや、これって私のせいですか……？", answer: ["コユキ"], image: "r66.png" },
+            { questionText:"努力あるのみ", answer: ["サオリ"], image: "r67.png" },
+            { questionText:"助っ人のお問い合わせは常時受けつけています", answer: ["サオリ（水着）"], image: "r68.png" },
+            { questionText:"言葉より行動で", answer: ["サキ"], image: "r69.png" },
+            { questionText:"不可能を可能に", answer: ["サキ（水着）"], image: "r70.png" },
+            { questionText:"いつも見守っています", answer: ["サクラコ"], image: "r71.png" },
+            { questionText:"これが新たな一歩", answer: ["サクラコ（アイドル）"], image: "r72.png" },
+            { questionText:"被験者を常時募集しているわ／お問い合わせは万魔殿まで", answer: ["サツキ"], image: "r73.png" },
+            { questionText:"ぼく様を讃えよ！", answer: ["サヤ"], image: "r74.png" },
+            { questionText:"ぼく様は何でも知っているのだ！", answer: ["サヤ（私服）"], image: "r75.png" },
+            { questionText:"飲み物を混ぜて人生を変える時間だね", answer: ["シグレ"], image: "r76.png" },
+            { questionText:"郷愁さえも飲み干せるのなら", answer: ["シグレ（温泉）"], image: "r77.png" },
+            { questionText:"百夜堂、今日も元気に営業中！", answer: ["シズコ"], image: "r78.png" },
+            { questionText:"百夜堂フランチャイズ絶賛営業中！", answer: ["シズコ（水着）"], image: "r79.png" },
+            { questionText:"本は期限内に返却してください", answer: ["シミコ"], image: "r80.png" },
+            { questionText:"今日も一生懸命、料理の練習！", answer: ["ジュリ"], image: "r81.png" },
+            { questionText:"料理の練習、頑張ります！", answer: ["ジュリ（アルバイト）"], image: "r82.png" },
+            { questionText:"天使たちと一緒に", answer: ["シュン"], image: "r83.png" },
+            { questionText:"タンフールーが食べたい気分です！", answer: ["シュン（幼女）"], image: "r84.png" },
+            { questionText:"スパムお断り(╬☉益☉)", answer: ["ジュンコ"], image: "r85.png" },
+            { questionText:"食べてる時は邪魔しないで！", answer: ["ジュンコ（正月）"], image: "r86.png" },
+            { questionText:"ライディング仲間募集中……（まだ１/５）", answer: ["シロコ"], image: "r87.png" },
+            { questionText:"今キヴォトス縦断中", answer: ["シロコ（ライディング）"], image: "r88.png" },
+            { questionText:"ん、食料が必要な人は連絡して", answer: ["シロコ（水着）"], image: "r89.png" },
+            { questionText:"ライディング仲間募集中……（２/５）", answer: ["シロコ＊テラー"], image: "r90.png" },
+            { questionText:"今日も平穏な一日を", answer: ["スズミ"], image: "r91.png" },
+            { questionText:"健全な身体は健全な精神が宿る", answer: ["スミレ"], image: "r92.png" },
+            { questionText:"ドリンク、いかがですか？", answer: ["スミレ（アルバイト）"], image: "r93.png" },
+            { questionText:"言の葉を紡ぐのは難しいものだね", answer: ["セイア"], image: "r94.png" },
+            { questionText:"緊急メッセージの受信設定をお願いします", answer: ["セナ"], image: "r95.png" },
+            { questionText:"対策委員会、黒見セリカです", answer: ["セリカ"], image: "r96.png" },
+            { questionText:"新年明けましておめでとうございます", answer: ["セリカ（正月）"], image: "r97.png" },
+            { questionText:"休暇中！！！！！！！", answer: ["セリカ（水着）"], image: "r98.png" },
+            { questionText:"体調が悪い方はいつでもご連絡を", answer: ["セリナ"], image: "r99.png" },
+            { questionText:"聖なる夜、みなさんに幸せが訪れますよう", answer: ["セリナ（クリスマス）"], image: "r100.png" },
+            { questionText:"「週刊万魔殿」への情報提供、いつでも受け付けています！", answer: ["チアキ"], image: "r101.png" },
+            { questionText:"このヒゲを見よ！！", answer: ["チェリノ"], image: "r102.png" },
+            { questionText:"世の中に悪い髭など無い！", answer: ["チェリノ（温泉）"], image: "r103.png" },
+            { questionText:"雲を見つけたら教えて", answer: ["チセ"], image: "r104.png" },
+            { questionText:"キラキラ～。どこにあるのかな？", answer: ["チセ（水着）"], image: "r105.png" },
+            { questionText:"喪失の先に", answer: ["チナツ"], image: "r106.png" },
+            { questionText:"未知の視界を求めて", answer: ["チナツ（温泉）"], image: "r107.png" },
+            { questionText:"セキュリティチェックは日頃から", answer: ["チヒロ"], image: "r108.png" },
+            { questionText:"いつかは、一人前の忍者に……", answer: ["ツクヨ"], image: "r109.png" },
+            { questionText:"眠い……", answer: ["ツバキ"], image: "r110.png" },
+            { questionText:"眠いけど……ガイドを……", answer: ["ツバキ（ガイド）"], image: "r111.png" },
+            { questionText:"……", answer: ["ツルギ"], image: "r112.png" },
+            { questionText:"夏、海、青春", answer: ["ツルギ（水着）"], image: "r113.png" },
+            { questionText:"常時待機中", answer: ["トキ"], image: "r114.png" },
+            { questionText:"作戦待機中", answer: ["トキ（バニーガール）"], image: "r115.png" },
+            { questionText:"チェリノ会長についてのお話を聞かれませんか？", answer: ["トモエ"], image: "r116.png" },
+            { questionText:"休憩もかねてお散歩しています", answer: ["トモエ（チーパオ）"], image: "r117.png" },
+            { questionText:"いつでも余裕をもって、優雅に", answer: ["ナギサ"], image: "r118.png" },
+            { questionText:"大丈夫、私は……。", answer: ["ナグサ"], image: "r119.png" },
+            { questionText:"人生はチョコレートプレッツェル", answer: ["ナツ"], image: "r120.png" },
+            { questionText:"業務に関してはお気軽に副部長まで〜", answer: ["ニヤ"], image: "r121.png" },
+            { questionText:"あぁん！？", answer: ["ネル"], image: "r122.png" },
+            { questionText:"見せもんじゃねぇぞ", answer: ["ネル（バニーガール）"], image: "r123.png" },
+            { questionText:"はぁ……ダルいなぁ", answer: ["ネル（制服）"], image: "r124.png" },
+            { questionText:"キヴォトスの憂鬱", answer: ["ノア"], image: "r125.png" },
+            { questionText:"暗闇の彼方で", answer: ["ノア（パジャマ）"], image: "r126.png" },
+            { questionText:"急行快速、爆走特急～！！", answer: ["ノゾミ"], image: "r127.png" },
+            { questionText:"一緒に星を見に行きましょう！★彡", answer: ["ノドカ"], image: "r128.png" },
+            { questionText:"227号温泉郷、宿泊予約受付中です！", answer: ["ノドカ（温泉）"], image: "r129.png" },
+            { questionText:"楽しい一日になりますように", answer: ["ノノミ"], image: "r130.png" },
+            { questionText:"海ですよ、海～！", answer: ["ノノミ（水着）"], image: "r131.png" },
+            { questionText:"ダイエット中……", answer: ["ハスミ"], image: "r132.png" },
+            { questionText:"大会運営に関するお問い合わせは実行委員会まで", answer: ["ハスミ（体操服）"], image: "r133.png" },
+            { questionText:"何かあったら、どなたでも救護騎士団へ！", answer: ["ハナエ"], image: "r134.png" },
+            { questionText:"サンタさんを待ってます！", answer: ["ハナエ（クリスマス）"], image: "r135.png" },
+            { questionText:"「色々」と嗜むタイプです♪", answer: ["ハナコ"], image: "r136.png" },
+            { questionText:"さらけ出した肌のぶんだけ、素直になっていいですか？", answer: ["ハナコ（水着）"], image: "r137.png" },
+            { questionText:"よろしくお願いいたします", answer: ["ハルカ"], image: "r138.png" },
+            { questionText:"新年も末永くお幸せにお過ごしください", answer: ["ハルカ（正月）"], image: "r139.png" },
+            { questionText:"EAT OR DIE", answer: ["ハルナ"], image: "r140.png" },
+            { questionText:"今年も、究極の美食を探求いたします", answer: ["ハルナ（正月）"], image: "r141.png" },
+            { questionText:"運動と美食の相関関係を探してみましょうか", answer: ["ハルナ（体操服）"], image: "r142.png" },
+            { questionText:"急な用件はDMで", answer: ["ハレ"], image: "r143.png" },
+            { questionText:"アテナ3号調整中。スパムメッセージには注意", answer: ["ハレ（キャンプ）"], image: "r144.png" },
+            { questionText:"↑↑↓↓←→←→", answer: ["ヒカリ"], image: "r145.png" },
+            { questionText:"空欄", answer: ["ヒナ","ヒナ（水着）","ヒナ（ドレス）"], image: "r146.png" },
+            { questionText:"何かお困りの際は、いつでもご連絡ください！", answer: ["ヒナタ"], image: "r147.png" },
+            { questionText:"出張中です、なにかありましたらメッセージをどうぞ！", answer: ["ヒナタ（水着）"], image: "r148.png" },
+            { questionText:"言葉より行動で", answer: ["ヒビキ"], image: "r149.png" },
+            { questionText:"もう少し練習する時間があれば……", answer: ["ヒビキ（応援団）"], image: "r150.png" },
+            { questionText:"ペロロフェスに一緒に行ってくれる人いますか？", answer: ["ヒフミ"], image: "r151.png" },
+            { questionText:"新しいペロロ様の浮き輪、見てください！", answer: ["ヒフミ（水着）"], image: "r152.png" },
+            { questionText:"ミレニアム最高峰の超天才清楚系病弱美少女", answer: ["ヒマリ"], image: "r153.png" },
+            { questionText:"人生は、苦痛の連続です……", answer: ["ヒヨリ"], image: "r154.png" },
+            { questionText:"夏……海……もしかして夢！？", answer: ["ヒヨリ（水着）"], image: "r155.png" },
+            { questionText:"ハジメマシテ！", answer: ["フィーナ"], image: "r156.png" },
+            { questionText:"一日くらい平穏な日が欲しいです(T_T)", answer: ["フウカ"], image: "r157.png" },
+            { questionText:"平穏無事、祈願中", answer: ["フウカ（正月）"], image: "r158.png" },
+            { questionText:"コーヒーにはドーナッツ！", answer: ["フブキ"], image: "r159.png" },
+            { questionText:"私のバカンス……どこ……", answer: ["フブキ（水着）"], image: "r160.png" },
+            { questionText:"昼寝中　起こさないで", answer: ["ホシノ"], image: "r161.png" },
+            { questionText:"お昼寝中～。仲間はいつでも歓迎だよ", answer: ["ホシノ（水着）"], image: "r162.png" },
+            { questionText:"お昼寝中。急ぎのときは電話して～", answer: ["ホシノ（臨戦）"], image: "r163.png" },
+            { questionText:"グラフィティ大好き！", answer: ["マキ"], image: "r164.png" },
+            { questionText:"ネットがないのは嫌！", answer: ["マキ（キャンプ）"], image: "r165.png" },
+            { questionText:"私こそ、ゲヘナの真のリーダーである！", answer: ["マコト"], image: "r166.png" },
+            { questionText:"塵も積もれば山となる", answer: ["マシロ"], image: "r167.png" },
+            { questionText:"井の中の蛙 大海を知らず", answer: ["マシロ（水着）"], image: "r168.png" },
+            { questionText:"みなさんの心が、安らぎと共にありますように", answer: ["マリー"], image: "r169.png" },
+            { questionText:"平和なお祭りになりますように", answer: ["マリー（体操服）"], image: "r170.png" },
+            { questionText:"この歌が届きますように", answer: ["マリー（アイドル）"], image: "r171.png" },
+            { questionText:"不穏分子は粛清する！", answer: ["マリナ"], image: "r172.png" },
+            { questionText:"この服は……少し露出が……", answer: ["マリナ（チーパオ）"], image: "r173.png" },
+            { questionText:"一緒にお話ししてくれる人募集中！", answer: ["ミカ"], image: "r174.png" },
+            { questionText:"雨でも降らないかな……", answer: ["ミサキ"], image: "r175.png" },
+            { questionText:"「少女忍法帖ミチルっち」チャンネル登録よろしく！", answer: ["ミチル"], image: "r176.png" },
+            { questionText:"おすすめのゲーム教えてください", answer: ["ミドリ"], image: "r177.png" },
+            { questionText:"今日も精進します。", answer: ["ミドリ（メイド）"], image: "r178.png" },
+            { questionText:"風の声が聞こえるな……", answer: ["ミナ"], image: "r179.png" },
+            { questionText:"私はいつでも準備できております", answer: ["ミネ"], image: "r180.png" },
+            { questionText:"救護騎士団の応援を何卒よろしくお願いします！", answer: ["ミネ（アイドル）"], image: "r181.png" },
+            { questionText:"連邦生徒会は週休4日を保障せよ！", answer: ["ミノリ"], image: "r182.png" },
+            { questionText:"毎日着実に、一歩ずつ", answer: ["ミモリ"], image: "r183.png" },
+            { questionText:"なんだか、いいことが起きそう", answer: ["ミモリ（水着）"], image: "r184.png" },
+            { questionText:"キヴォトスの平和のために", answer: ["ミヤコ"], image: "r185.png" },
+            { questionText:"結果で証明します", answer: ["ミヤコ（水着）"], image: "r186.png" },
+            { questionText:"一寸先は闇……", answer: ["ミユ"], image: "r187.png" },
+            { questionText:"明日は明日の風が吹く", answer: ["ミユ（水着）"], image: "r188.png" },
+            { questionText:"何か面白いことないかな～", answer: ["ムツキ"], image: "r189.png" },
+            { questionText:"今年はもっと楽しい一年にしようね♪", answer: ["ムツキ（正月）"], image: "r190.png" },
+            { questionText:"温泉開発の同志はいつでも歓迎だよ！", answer: ["メグ"], image: "r191.png" },
+            { questionText:"お絵かきしてると、独り言が増えるんだよね～", answer: ["メル"], image: "r192.png" },
+            { questionText:"使わないミサイルや砲弾、積極的に買い取り中！", answer: ["モエ"], image: "r193.png" },
+            { questionText:"ミサイル……もっと大きなミサイル……", answer: ["モエ（水着）"], image: "r194.png" },
+            { questionText:"知識は力。ちゃんと守っていきます！", answer: ["モミジ"], image: "r195.png" },
+            { questionText:"ゲーム一筋！", answer: ["モモイ"], image: "r196.png" },
+            { questionText:"メイドゲーマー……一筋？", answer: ["モモイ（メイド）"], image: "r197.png" },
+            { questionText:"計算通り", answer: ["ユウカ"], image: "r198.png" },
+            { questionText:"晄輪大祭開催中！", answer: ["ユウカ（体操服）"], image: "r199.png" },
+            { questionText:"うう……眠れない……", answer: ["ユウカ（パジャマ）"], image: "r200.png" },
+            { questionText:"身共も、ももとーくを始めましたの！", answer: ["ユカリ"], image: "r201.png" },
+            { questionText:"404 Not Found", answer: ["ユズ"], image: "r202.png" },
+            { questionText:"403 Forbidden", answer: ["ユズ（メイド）"], image: "r203.png" },
+            { questionText:"#まだ成長期", answer: ["ヨシミ"], image: "r204.png" },
+            { questionText:"#猛特訓中", answer: ["ヨシミ（バンド）"], image: "r205.png" },
+            { questionText:"Tasklist", answer: ["リオ"], image: "r206.png" },
+            { questionText:"玄武商会、営業中だよ", answer: ["ルミ"], image: "r207.png" },
+            { questionText:"まずは打率1割を！", answer: ["レイ"], image: "r208.png" },
+            { questionText:"“The ♠ of Vigilante”", answer: ["レイサ"], image: "r209.png" },
+            { questionText:"修行でしたらいつでも", answer: ["レイジョ"], image: "r210.png" },
+            { questionText:"今が青春真っ盛り！", answer: ["レンゲ"], image: "r211.png" },
+            { questionText:"私はいつも、あなた様のそばに……♡", answer: ["ワカモ"], image: "r212.png" },
+            { questionText:"夏よりもなお熱いこの心で♡", answer: ["ワカモ（水着）"], image: "r213.png" },
+        ];
+
+        let questions = allQuestions.slice().sort(() => Math.random() - 0.5).slice(0, 10);
+        //let questions = allQuestions; 
+        let currentQuestion = 0;
+        let score = 0;
+
+        function showQuestion() {
+            document.getElementById("questionText").innerText = questions[currentQuestion].questionText;
+        }
+
+        function checkAnswer() {
+            let userAnswer = document.getElementById("answer").value.trim();
+            let resultElement = document.getElementById("result");
+            let resultImage = document.getElementById("resultImage");
+            let correctAnswer = questions[currentQuestion].answer;
+
+            if (Array.isArray(correctAnswer)) {
+                if (correctAnswer.includes(userAnswer)) {
+                    resultElement.innerText = "正解！";
+                    score++;
+                } else {
+                    resultElement.innerText = "不正解！";
+                }
+            } else {
+                if (userAnswer === correctAnswer) {
+                    resultElement.innerText = "正解！";
+                    score++;
+                } else {
+                    resultElement.innerText = "不正解！";
+                }
+            }
+
+            resultImage.src = questions[currentQuestion].image + "?v=" + new Date().getTime();
+            resultImage.style.display = "block";
+
+            moveToNextQuestion();
+        }
+
+        function passQuestion() {
+            let resultElement = document.getElementById("result");
+            let resultImage = document.getElementById("resultImage");
+
+            resultElement.innerText = "不正解！（パス）";
+            resultImage.src = questions[currentQuestion].image + "?v=" + new Date().getTime();
+            resultImage.style.display = "block";
+
+            moveToNextQuestion();
+        }
+
+        function moveToNextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                setTimeout(() => {
+                    document.getElementById("result").innerText = "";
+                    document.getElementById("resultImage").style.display = "none";
+                    document.getElementById("answer").value = "";
+                    showQuestion();
+                }, 2000);
+            } else {
+                setTimeout(() => {
+                    document.getElementById("score").innerText = `先生のスコア: ${score} / ${questions.length}`;
+                    document.getElementById("score").style.display = "block";
+                    document.getElementById("screenshotButton").style.display = "block";
+                }, 2000);
+            }
+        }
+
+        function takeScreenshot() {
+            html2canvas(document.body, { useCORS: true }).then(canvas => {
+                let link = document.createElement("a");
+                link.href = canvas.toDataURL("image/png");
+                link.download = "quiz_result.png";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(error => {
+                console.error("スクリーンショットの取得に失敗しました", error);
+                alert("スクリーンショットの保存に失敗しました。ページを再読み込みして試してください。");
+            });
+        }
+
+        showQuestion();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
